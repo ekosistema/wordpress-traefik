@@ -1,0 +1,59 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false # default is true
+
+# Useful, but optional logs
+# log:
+#  level: ERROR
+#   format: common
+#   filePath: /var/log/traefik/traefik.log
+
+# Useful, but optional accesslog
+# accesslog:
+#   format: common
+#   filePath: /var/log/traefik/access.log
+
+api:
+  dashboard: true # default is true
+  #insecure: true  # Be careful if you use this in production
+
+# Entry Points
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: :443
+
+  traefik:
+    address: :8080
+
+# Certificates
+
+certificatesResolvers:
+  # Used for letsencrypt
+  staging:
+    acme:
+      email: ${MY_EMAIL} # Place your email here
+      storage: /ssl-certs/acme.json
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      httpChallenge:
+        entryPoint: web
+  production:
+    acme:
+      email: ${MY_EMAIL} # Place your email here
+      storage: /ssl-certs/acme.json
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      httpChallenge:
+        entryPoint: web
+
+# Providers
+
+providers:
+  docker:
+    exposedByDefault: false # default is true
