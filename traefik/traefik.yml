@@ -14,8 +14,8 @@ global:
 #   filePath: /var/log/traefik/access.log
 
 api:
-  dashboard: true # default is true
-  #insecure: true  # Be careful if you use this in production
+  dashboard: false # default is true
+  insecure: false # Be careful if you use this in production
 
 # Entry Points
 entryPoints:
