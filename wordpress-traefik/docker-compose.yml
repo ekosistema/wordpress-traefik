@@ -1,0 +1,73 @@
+services:
+
+# TRAEFIK
+
+  traefik:
+    image: "traefik:latest"
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=info@example.com" # CHANGE YOUR EMAIL HERE, AS WELL AS IN TRAEFIK.TOML. THIS IS IMPORTANT!!!
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik.toml:/traefik.toml
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./letsencrypt:/letsencrypt"
+    networks:
+      - web
+
+# WORDPRESS
+
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - ./db:/var/lib/mysql
+    labels:
+      - 'traefik.enable=false'
+    networks:
+      - web
+
+  wordpress:
+    image: wordpress:latest
+    depends_on:
+      - db
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: wordpress-traefik-db-1         # be careful if you change the name of the containing folder, the name of the stack will change too!!
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+    volumes:
+      - ./wordpress:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${ROUTER}.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.${ROUTER}.entrypoints=websecure"
+      - "traefik.http.routers.${ROUTER}.tls.certresolver=myresolver"
+    networks:
+      - web
+
+volumes:
+
+# VOLUMES
+
+  wordpress:
+  db:
+
+networks:
+  web:
+    driver: bridge

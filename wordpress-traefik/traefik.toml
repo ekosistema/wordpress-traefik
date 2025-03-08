@@ -1,0 +1,20 @@
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[providers]
+  [providers.docker]
+    exposedByDefault = true
+    watch = true
+
+[certificatesResolvers]
+  [certificatesResolvers.myresolver.acme]
+    email = "info@example.com"   # CHANGE YOUR EMAIL HERE AS IN YOR DOCKER COMPOSE. THIS IS IMPORTANT!!!
+    storage = "acme.json"
+    [certificatesResolvers.myresolver.acme.httpChallenge]
+      entryPoint = "web"
+
+[log]
+  level = "INFO"
